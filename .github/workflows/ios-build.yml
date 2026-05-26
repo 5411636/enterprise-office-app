@@ -1,0 +1,52 @@
+name: Build iOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup EAS
+        run: npm install -g eas-cli
+
+      - name: Login to EAS
+        env:
+          EAS_PASSWORD: ${{ secrets.EAS_PASSWORD }}
+        run: eas login --non-interactive --token ${{ secrets.EAS_TOKEN }}
+
+      - name: Generate iOS native project
+        run: npx expo prebuild --platform ios --clean
+
+      - name: Build iOS
+        env:
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+        run: |
+          export FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD=${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          export FASTLANE_USER=${{ secrets.APPLE_ID }}
+          eas build --platform ios --profile preview --non-interactive
+
+      - name: Download IPA
+        uses: actions/download-artifact@v4
+        with:
+          name: eas-build
+
+      - name: Upload IPA to Releases
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "*.ipa"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
