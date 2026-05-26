@@ -30,14 +30,24 @@ jobs:
       - name: Generate iOS native project
         run: npx expo prebuild --platform ios --clean
 
-      - name: Build iOS and download
+      - name: Build iOS
         env:
           EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
           FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           FASTLANE_USER: ${{ secrets.APPLE_ID }}
         run: |
+          export EXPO_TOKEN=${{ secrets.EAS_TOKEN }}
+          export FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD=${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          export FASTLANE_USER=${{ secrets.APPLE_ID }}
           eas build --platform ios --profile preview --wait
-          eas build:download --id $(eas build:list --platform ios --latest --json | jq -r '.[0].id')
+
+      - name: Download IPA
+        env:
+          EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
+        run: |
+          export EXPO_TOKEN=${{ secrets.EAS_TOKEN }}
+          BUILD_ID=$(eas build:list --platform ios --latest --json | jq -r '.[0].id')
+          eas build:download --id $BUILD_ID --platform ios
 
       - name: Upload to Releases
         run: |
