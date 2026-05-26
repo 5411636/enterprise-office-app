@@ -1,0 +1,23 @@
+workflows:
+  ios-workflow:
+    name: iOS Build
+    max_build_duration: 60
+    environment:
+      node: "20"
+    cache:
+      cache_paths:
+        - ~/.npm
+    artifacts:
+      paths:
+        - build/ios/*.ipa
+    scripts:
+      - name: Install dependencies
+        script: |
+          npm install
+      - name: Generate iOS project
+        script: |
+          npx expo prebuild --platform ios --clean
+      - name: Build iOS
+        script: |
+          xcodebuild build -workspace ios/EnterpriseOfficeApp.xcworkspace -scheme EnterpriseOfficeApp -configuration Release -archivePath build/ios/EnterpriseOfficeApp.xcarchive archive
+          xcodebuild -exportArchive -archivePath build/ios/EnterpriseOfficeApp.xcarchive -exportOptionsPlist ios/ExportOptions.plist -exportPath build/ios
