@@ -39,8 +39,5 @@ jobs:
           eas build --platform ios --profile preview --output ./output.ipa
 
       - name: Upload to Releases
-        uses: softprops/action-gh-release@v2
-        with:
-          files: "output.ipa"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ios-build-v1 --repo 5411636/enterprise-office-app output.ipa || true
