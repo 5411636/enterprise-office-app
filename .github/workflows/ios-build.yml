@@ -27,10 +27,17 @@ jobs:
       - name: Generate iOS native project
         run: npx expo prebuild --platform ios --clean
 
-      - name: Install CocoaPods
-        run: cd ios && pod install && cd ..
+      - name: Install Pods
+        run: |
+          cd ios
+          pod install
 
-      - name: Build iOS with xcodebuild
+      - name: Build iOS (no signing)
+        env:
+          CODE_SIGNING_ALLOWED: NO
+          CODE_SIGNING_REQUIRED: NO
+          CODE_SIGN_IDENTITY: ""
+          DEVELOPMENT_TEAM: ""
         run: |
           cd ios
           xcodebuild archive \
@@ -38,6 +45,10 @@ jobs:
             -scheme app \
             -configuration Release \
             -archivePath ../build/app.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" \
             -quiet
 
       - name: Create IPA
@@ -46,7 +57,12 @@ jobs:
           cp -r build/app.xcarchive/Products/Library/Application\ Support/*.app build/Payload/
           cd build
           zip -r output.ipa Payload
-          cd ..
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: build/output.ipa
 
       - name: Upload to Releases
         run: |
