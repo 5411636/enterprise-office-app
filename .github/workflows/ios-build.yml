@@ -23,9 +23,7 @@ jobs:
         run: npm install -g eas-cli
 
       - name: Login to EAS
-        env:
-          EAS_PASSWORD: ${{ secrets.EAS_PASSWORD }}
-        run: eas login --non-interactive --token ${{ secrets.EAS_TOKEN }}
+        run: echo ${{ secrets.EAS_TOKEN }} | eas login --non-interactive
 
       - name: Generate iOS native project
         run: npx expo prebuild --platform ios --clean
@@ -37,7 +35,7 @@ jobs:
         run: |
           export FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD=${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           export FASTLANE_USER=${{ secrets.APPLE_ID }}
-          eas build --platform ios --profile preview --non-interactive
+          eas build --platform ios --profile preview
 
       - name: Download IPA
         uses: actions/download-artifact@v4
