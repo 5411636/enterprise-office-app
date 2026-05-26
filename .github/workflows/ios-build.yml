@@ -38,7 +38,7 @@ jobs:
         run: |
           eas build --platform ios --profile preview --output ./output.ipa
 
-- name: Upload to Releases
+      - name: Upload to Releases
         uses: softprops/action-gh-release@v2
         with:
           files: "output.ipa"
