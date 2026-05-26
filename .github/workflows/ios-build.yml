@@ -24,36 +24,30 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install EAS CLI
-        run: npm install -g eas-cli
-
-      - name: Verify EAS authentication
-        run: |
-          export EXPO_TOKEN=${{ secrets.EAS_TOKEN }}
-          eas whoami || true
-
       - name: Generate iOS native project
         run: npx expo prebuild --platform ios --clean
 
-      - name: Build iOS
-        env:
-          EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
-          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          FASTLANE_USER: ${{ secrets.APPLE_ID }}
-        run: |
-          export EXPO_TOKEN=${{ secrets.EAS_TOKEN }}
-          export FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD=${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          export FASTLANE_USER=${{ secrets.APPLE_ID }}
-          eas build --platform ios --profile preview --wait
+      - name: Install CocoaPods
+        run: cd ios && pod install && cd ..
 
-      - name: Download IPA
-        env:
-          EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
+      - name: Build iOS with xcodebuild
         run: |
-          export EXPO_TOKEN=${{ secrets.EAS_TOKEN }}
-          BUILD_ID=$(eas build:list --platform ios --latest --json | jq -r '.[0].id')
-          eas build:download --id $BUILD_ID --platform ios
+          cd ios
+          xcodebuild archive \
+            -workspace app.xcworkspace \
+            -scheme app \
+            -configuration Release \
+            -archivePath ../build/app.xcarchive \
+            -quiet
+
+      - name: Create IPA
+        run: |
+          mkdir -p build/Payload
+          cp -r build/app.xcarchive/Products/Library/Application\ Support/*.app build/Payload/
+          cd build
+          zip -r output.ipa Payload
+          cd ..
 
       - name: Upload to Releases
         run: |
-          gh release create ios-build-v1 --repo 5411636/enterprise-office-app --title "iOS Build v1" build/*.ipa || true
+          gh release create ios-build-v1 --repo 5411636/enterprise-office-app --title "iOS Build v1" build/output.ipa || true
