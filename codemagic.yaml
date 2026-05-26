@@ -8,8 +8,7 @@ workflows:
       cache_paths:
         - ~/.npm
     artifacts:
-      paths:
-        - build/ios/*.ipa
+      - build/ios/*.ipa
     scripts:
       - name: Install dependencies
         script: |
