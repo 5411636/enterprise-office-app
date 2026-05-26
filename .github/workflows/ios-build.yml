@@ -36,16 +36,11 @@ jobs:
           FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           FASTLANE_USER: ${{ secrets.APPLE_ID }}
         run: |
-          eas build --platform ios --profile preview
+          eas build --platform ios --profile preview --output ./output.ipa
 
-      - name: Download IPA
-        uses: actions/download-artifact@v4
-        with:
-          name: eas-build
-
-      - name: Upload IPA to Releases
+      - name: Upload to Releases
         uses: softprops/action-gh-release@v1
         with:
-          files: "*.ipa"
+          files: "output.ipa"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
