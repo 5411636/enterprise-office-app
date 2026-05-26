@@ -1,0 +1,42 @@
+⚠️ 重要：需要手动创建 babel.config.js
+
+由于项目限制，请手动创建此文件：
+
+文件名: babel.config.js
+位置: 项目根目录
+
+内容:
+-------------------------------------------
+module.exports = function(api) {
+  api.cache(true);
+  return {
+    presets: ['babel-preset-expo'],
+  };
+};
+-------------------------------------------
+
+创建命令（在项目根目录执行）:
+
+macOS/Linux:
+cat > babel.config.js << 'EOF'
+module.exports = function(api) {
+  api.cache(true);
+  return {
+    presets: ['babel-preset-expo'],
+  };
+};
+EOF
+
+Windows (PowerShell):
+@"
+module.exports = function(api) {
+  api.cache(true);
+  return {
+    presets: ['babel-preset-expo'],
+  };
+};
+"@ | Out-File -FilePath babel.config.js -Encoding UTF8
+
+或者直接用文本编辑器创建该文件。
+
+创建完成后运行: npm install
