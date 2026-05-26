@@ -59,10 +59,9 @@ jobs:
 
       - name: Create IPA
         run: |
-          APP_PATH=$(find build/app.xcarchive -name "*.app" -type d | head -1)
-          echo "Found app at: $APP_PATH"
           mkdir -p build/Payload
-          cp -r "$APP_PATH" build/Payload/
+          APP_NAME="app"
+          cp -r build/app.xcarchive/Products/Library/Application\ Support/$APP_NAME.app build/Payload/
           cd build
           zip -r output.ipa Payload
           ls -la output.ipa
