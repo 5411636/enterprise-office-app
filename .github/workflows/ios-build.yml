@@ -49,19 +49,17 @@ jobs:
             -scheme app \
             -configuration Release \
             -destination 'generic/platform=iOS' \
-            -archivePath ./app.xcarchive \
+            -archivePath ../build/app.xcarchive \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="" \
             DEVELOPMENT_TEAM="" \
             -quiet
-          ls -la app.xcarchive/Products/Library/Application\ Support/
 
       - name: Create IPA
         run: |
-          mkdir -p build/Payload
-          cp -r ios/app.xcarchive/Products/Library/Application\ Support/*.app build/Payload/
+          find build/app.xcarchive -name "*.app" -type d | head -1 | xargs -I{} cp -r {} build/Payload/
           cd build
           zip -r output.ipa Payload
 
