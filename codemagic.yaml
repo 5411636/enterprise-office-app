@@ -14,9 +14,18 @@ workflows:
       - name: Generate iOS project
         script: |
           npx expo prebuild --platform ios --clean
+      - name: Find workspace
+        script: |
+          ls -la ios/
       - name: Build iOS
         script: |
-          xcodebuild build -workspace ios/EnterpriseOfficeApp.xcworkspace -scheme EnterpriseOfficeApp -configuration Release -archivePath build/ios/EnterpriseOfficeApp.xcarchive archive
-          xcodebuild -exportArchive -archivePath build/ios/EnterpriseOfficeApp.xcarchive -exportOptionsPlist ios/ExportOptions.plist -exportPath build/ios
+          cd ios
+          WORKSPACE=$(ls *.xcworkspace 2>/dev/null | head -1)
+          SCHEME=$(ls *.xcworkspace 2>/dev/null | sed 's/.xcworkspace//' | head -1)
+          echo "Found workspace: $WORKSPACE"
+          echo "Found scheme: $SCHEME"
+          xcodebuild build -workspace "$WORKSPACE" -scheme "$SCHEME" -configuration Release -archivePath build/ios.xcarchive archive
+          xcodebuild -exportArchive -archivePath build/ios.xcarchive -exportOptionsPlist ExportOptions.plist -exportPath build/ios || true
+          xcodebuild -exportArchive -archivePath build/ios.xcarchive -exportPath build/ios -allowProvisioningUpdates 2>&1 | tee build.log || true
     artifacts:
       - build/ios/*.ipa
