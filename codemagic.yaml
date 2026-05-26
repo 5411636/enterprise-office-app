@@ -4,15 +4,13 @@ workflows:
     max_build_duration: 60
     environment:
       node: "20"
-    cache:
-      cache_paths:
-        - ~/.npm
-    artifacts:
-      - build/ios/*.ipa
     scripts:
       - name: Install dependencies
         script: |
           npm install
+      - name: Fix expo permissions
+        script: |
+          chmod +x node_modules/.bin/expo || true
       - name: Generate iOS project
         script: |
           npx expo prebuild --platform ios --clean
@@ -20,3 +18,5 @@ workflows:
         script: |
           xcodebuild build -workspace ios/EnterpriseOfficeApp.xcworkspace -scheme EnterpriseOfficeApp -configuration Release -archivePath build/ios/EnterpriseOfficeApp.xcarchive archive
           xcodebuild -exportArchive -archivePath build/ios/EnterpriseOfficeApp.xcarchive -exportOptionsPlist ios/ExportOptions.plist -exportPath build/ios
+    artifacts:
+      - build/ios/*.ipa
