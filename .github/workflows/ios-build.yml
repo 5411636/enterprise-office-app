@@ -20,14 +20,11 @@ jobs:
         run: npm ci
 
       - name: Setup EAS
-        run: npm install -g eas-cli
-
-      - name: Login to EAS
         env:
           EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
         run: |
-          echo "Token: $EAS_TOKEN"
-          eas login --token "$EAS_TOKEN"
+          npm install -g eas-cli
+          echo $EAS_TOKEN | eas login
 
       - name: Generate iOS native project
         run: npx expo prebuild --platform ios --clean
