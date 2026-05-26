@@ -19,12 +19,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install and login EAS
-        env:
-          EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Verify EAS authentication
         run: |
-          npm install -g eas-cli
-          export EXPO_TOKEN=$EAS_TOKEN
+          export EXPO_TOKEN=${{ secrets.EAS_TOKEN }}
           eas whoami || true
 
       - name: Generate iOS native project
@@ -32,12 +32,10 @@ jobs:
 
       - name: Build iOS
         env:
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          EXPO_TOKEN: ${{ secrets.EAS_TOKEN }}
+          EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
+          FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          FASTLANE_USER: ${{ secrets.APPLE_ID }}
         run: |
-          export FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD=${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          export FASTLANE_USER=${{ secrets.APPLE_ID }}
           eas build --platform ios --profile preview
 
       - name: Download IPA
