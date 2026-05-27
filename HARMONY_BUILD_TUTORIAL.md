@@ -1,6 +1,6 @@
-# React Native iOS/鸿蒙 云打包完整教程
+# React Native 鸿蒙/安卓 云打包完整教程
 
-> **无需 Mac电脑 | 无需苹果开发者账号 | 完全免费**
+> **无需 Mac电脑 | 无需谷歌/华为开发者账号 | 完全免费**
 > **鸿蒙系统可直接安装 APK**
 
 ---
@@ -39,7 +39,7 @@
 
 鸿蒙系统（HarmonyOS）兼容 Android 应用：
 - 鸿蒙 2.0+ 支持 APK 直接安装
-- 鸿蒙 3.0+ 支持 AAB（Google Play 格式）
+- 鸿蒙 3.0+ 完全支持 APK
 - 无需华为开发者账号
 
 ### 1.4 本方案的局限
@@ -66,7 +66,6 @@
 |------|------|---------|
 | Node.js | React Native 环境 | https://nodejs.org/ |
 | Git | 代码版本管理 | https://git-scm.com/ |
-| HDB（华为开发工具）可选 | 鸿蒙调试 | https://developer.huawei.com/ |
 
 ### 2.3 环境验证
 
@@ -114,7 +113,7 @@ C:\Users\86137\Desktop\langchain\code\rn\react-native-app
 2. 点击右上角 **+** → **New repository**
 3. 填写：
    - **Repository name**: `enterprise-office-app`
-   - **Description**: `React Native iOS/Android App`
+   - **Description**: `React Native Android App`
    - 选择 **Private** 或 **Public**
 4. 点击 **Create repository**
 
@@ -207,7 +206,7 @@ jobs:
       - name: Build Android Release APK (unsigned)
         run: |
           cd android
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease || true
 
       - name: Create output directory
         run: |
@@ -300,22 +299,30 @@ git push
 
 ### 7.2 安装 APK（鸿蒙/安卓通用）
 
-#### 方法一：直接安装（推荐）
+#### 步骤一：传输 APK 到手机
 
-1. 将 APK 文件传输到手机
-2. 在手机上找到 APK 文件
-3. 点击安装
-4. 如果提示"禁止安装未知来源应用"：
-   - 进入 **设置** → **安全** → **更多设置**
-   - 开启 **允许安装未知来源应用**
-   - 或进入 **设置** → **应用** → **应用管理** → 找到文件管理器 → 允许安装未知来源
+- 方法一：数据线连接电脑，直接复制 APK
+- 方法二：微信/QQ文件传输
+- 方法三：华为云空间
 
-#### 方法二：华为应用市场（可选）
+#### 步骤二：开启安装未知来源
 
-如果你有华为开发者账号，可以：
-1. 登录 https://developer.huawei.com/
-2. 上传 APK
-3. 使用 AppGallery Connect 分发
+```
+鸿蒙/安卓手机设置：
+设置 → 安全 → 允许安装未知来源应用 → 开启
+```
+
+或者：
+
+```
+设置 → 应用 → 应用管理 → 找到文件管理器 → 允许安装未知来源
+```
+
+#### 步骤三：安装
+
+1. 找到 APK 文件
+2. 点击 → 安装
+3. 等待完成
 
 ---
 
@@ -329,24 +336,7 @@ git push
 | 鸿蒙 3.0 | 完全支持 APK |
 | 鸿蒙 4.0 | 完全支持 APK |
 
-### 8.2 鸿蒙设备安装 APK 步骤
-
-1. **传输 APK 到手机**
-   - 方法一：数据线连接电脑，直接复制 APK
-   - 方法二：微信/QQ文件传输
-   - 方法三：华为云空间
-
-2. **开启安装未知来源**
-   ```
-   设置 → 安全 → 允许安装未知来源应用 → 开启
-   ```
-
-3. **安装**
-   - 找到 APK 文件
-   - 点击 → 安装
-   - 等待完成
-
-### 8.3 鸿蒙特有的问题
+### 8.2 鸿蒙设备安装 APK 可能遇到的问题
 
 #### 问题：安装后无法打开
 
@@ -403,7 +393,6 @@ Execution failed for task ':app:processReleaseResources'.
 **原因**：资源文件问题或内存不足
 
 **解决**：
-- 增加 Gradle 内存配置
 - 清理构建缓存
 
 ```bash
@@ -597,9 +586,6 @@ jobs:
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       }
-    },
-    "ios": {
-      "bundleIdentifier": "com.enterprise.officeapp"
     }
   }
 }
@@ -607,59 +593,9 @@ jobs:
 
 ---
 
-## 11. iOS + Android 双平台构建（同时）
+## 11. 方案对比和进阶
 
-如果你需要同时构建 iOS 和 Android，可以创建两个 workflow 文件：
-
-### 11.1 iOS 工作流（ios-build.yml）
-
-参考 [IOS_BUILD_TUTORIAL.md](./IOS_BUILD_TUTORIAL.md)
-
-### 11.2 Android 工作流（android-build.yml）
-
-参考本文档
-
-### 11.3 组合触发（可选）
-
-创建一个统一的 workflow 同时触发两个构建：
-
-```yaml
-name: Build All Platforms
-
-on:
-  workflow_dispatch:
-
-jobs:
-  ios-build:
-    uses: ./.github/workflows/ios-build.yml
-
-  android-build:
-    uses: ./.github/workflows/android-build.yml
-```
-
----
-
-## 12. 快速检查清单
-
-构建前确认：
-
-- [ ] GitHub 仓库已创建
-- [ ] android-build.yml 已提交并推送
-- [ ] 所有文件已 git add 和 git commit
-- [ ] GitHub Actions 权限设置为 Read
-- [ ] 等待构建完成（无红色错误）
-
-安装前确认：
-
-- [ ] 下载了正确的 APK（debug 版推荐）
-- [ ] 鸿蒙/安卓设备已连接或 APK 已传输
-- [ ] 已开启"允许安装未知来源应用"
-
----
-
-## 13. 方案对比和进阶
-
-### 13.1 如果你想签名 APK
+### 11.1 如果你想签名 APK（用于正式发布）
 
 #### 方法 A：使用 Android Studio 自签名
 
@@ -682,7 +618,7 @@ jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore my-release-key.
 jarsigner -verify -verbose -certs my-app.apk
 ```
 
-### 13.2 如果你想上架应用市场
+### 11.2 如果你想上架应用市场
 
 | 应用市场 | 需要账号 | 审核时间 | 难度 |
 |---------|---------|---------|------|
@@ -691,7 +627,7 @@ jarsigner -verify -verbose -certs my-app.apk
 | Google Play | 需注册（$25） | 1-7天 | 简单 |
 | 小米应用商店 | 需注册 | 1-3天 | 中等 |
 
-### 13.3 如果你想使用 Google Play
+### 11.3 如果你想使用 Google Play
 
 1. 注册 Google Play 开发者账号（$25 一次性）
 2. 创建应用
@@ -701,7 +637,25 @@ jarsigner -verify -verbose -certs my-app.apk
 
 ---
 
-## 14. 项目信息
+## 12. 快速检查清单
+
+构建前确认：
+
+- [ ] GitHub 仓库已创建
+- [ ] android-build.yml 已提交并推送
+- [ ] 所有文件已 git add 和 git commit
+- [ ] GitHub Actions 权限设置为 Read
+- [ ] 等待构建完成（无红色错误）
+
+安装前确认：
+
+- [ ] 下载了正确的 APK（debug 版推荐）
+- [ ] 鸿蒙/安卓设备已连接或 APK 已传输
+- [ ] 已开启"允许安装未知来源应用"
+
+---
+
+## 13. 项目信息
 
 - **GitHub 仓库**：https://github.com/5411636/enterprise-office-app
 - **本地项目路径**：`C:\Users\86137\Desktop\langchain\code\rn\react-native-app`

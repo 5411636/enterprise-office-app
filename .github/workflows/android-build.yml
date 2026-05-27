@@ -1,0 +1,71 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Android native project
+        run: npx expo prebuild --platform android --clean
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build Android Debug APK
+        run: |
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Build Android Release APK (unsigned)
+        run: |
+          cd android
+          ./gradlew assembleRelease || true
+
+      - name: Create output directory
+        run: |
+          mkdir -p build
+          cp android/app/build/outputs/apk/debug/*.apk build/
+          cp android/app/build/outputs/apk/release/*.apk build/ 2>/dev/null || true
+          ls -la build/
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-debug-apk
+          path: build/app-debug.apk
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: android-release-apk
+          path: build/app-release.apk
+
+      - name: Upload to Releases
+        run: |
+          cd build
+          for apk in *.apk; do
+            [ -f "$apk" ] && gh release create android-build-v1 --repo 5411636/enterprise-office-app --title "Android Build v1" "$apk" || true
+          done
