@@ -1,6 +1,6 @@
-# React Native 鸿蒙/安卓 云打包完整教程
+# React Native 鸿蒙 云打包完整教程
 
-> **无需 Mac电脑 | 无需谷歌/华为开发者账号 | 完全免费**
+> **无需 Mac电脑 | 无需华为开发者账号 | 完全免费**
 > **鸿蒙系统可直接安装 APK**
 
 ---
@@ -14,9 +14,8 @@
 5. [GitHub Actions 配置](#5-github-actions-配置)
 6. [触发构建](#6-触发构建)
 7. [下载和安装 APK](#7-下载和安装-apk)
-8. [鸿蒙设备特殊说明](#8-鸿蒙设备特殊说明)
-9. [常见错误解决](#9-常见错误解决)
-10. [完整配置文件](#10-完整配置文件)
+8. [常见问题](#8-常见问题)
+9. [完整配置文件](#9-完整配置文件)
 
 ---
 
@@ -24,30 +23,23 @@
 
 ### 1.1 我们要做什么
 
-用 GitHub Actions 的 Linux 虚拟机编译 React Native 项目，生成可安装的 APK 文件，同时支持：
-- Android 设备
-- 鸿蒙设备（鸿蒙兼容 Android APK）
+用 GitHub Actions 的 Linux 虚拟机编译 React Native 项目，生成可安装的 APK 文件，直接在鸿蒙设备上安装。
 
-### 1.2 为什么不用 EAS/其他方案
-
-| 方案 | 费用 | 需要 Mac | 需要签名 | 难度 |
-|------|------|---------|---------|------|
-| EAS 云构建 | 免费有额度 | 否 | 要（复杂） | 中等 |
-| 本方案 | 完全免费 | 否 | 不要 | 简单 |
-
-### 1.3 鸿蒙系统的特殊性
+### 1.2 鸿蒙系统的特殊性
 
 鸿蒙系统（HarmonyOS）兼容 Android 应用：
 - 鸿蒙 2.0+ 支持 APK 直接安装
 - 鸿蒙 3.0+ 完全支持 APK
-- 无需华为开发者账号
+- 鸿蒙 4.0+ 完全支持 APK
+- **无需华为开发者账号**
+- **无需谷歌服务**
 
-### 1.4 本方案的局限
+### 1.3 本方案的局限
 
 - APK 未签名，只能用于：
   - 测试设备
   - 开启"允许安装未知来源应用"
-  - 鸿蒙/安卓设备测试
+  - 鸿蒙设备测试
 
 ---
 
@@ -59,6 +51,7 @@
 - npm 或 yarn
 - Git
 - GitHub 账号
+- 鸿蒙设备（手机/平板）
 
 ### 2.2 工具下载
 
@@ -90,7 +83,7 @@ npx create-expo-app@latest enterprise-office-app
 # 进入项目目录
 cd enterprise-office-app
 
-# 安装额外依赖（如果需要原生模块）
+# 安装额外依赖
 npm install
 ```
 
@@ -101,7 +94,7 @@ npm install
 C:\Users\86137\Desktop\langchain\code\rn\react-native-app
 ```
 
-如果你用自己的项目，把下面的 `enterprise-office-app` 替换成你的项目名。
+如果你用自己的项目，把 `enterprise-office-app` 替换成你的项目名。
 
 ---
 
@@ -113,7 +106,7 @@ C:\Users\86137\Desktop\langchain\code\rn\react-native-app
 2. 点击右上角 **+** → **New repository**
 3. 填写：
    - **Repository name**: `enterprise-office-app`
-   - **Description**: `React Native Android App`
+   - **Description**: `React Native HarmonyOS App`
    - 选择 **Private** 或 **Public**
 4. 点击 **Create repository**
 
@@ -122,19 +115,10 @@ C:\Users\86137\Desktop\langchain\code\rn\react-native-app
 在项目目录打开终端，执行：
 
 ```bash
-# 初始化 Git（如果还没初始化）
 git init
-
-# 添加所有文件
 git add .
-
-# 提交
 git commit -m "Initial commit"
-
-# 添加远程仓库（替换 YOUR_USERNAME 为你的 GitHub 用户名）
 git remote add origin https://github.com/YOUR_USERNAME/enterprise-office-app.git
-
-# 推送到 GitHub
 git branch -M main
 git push -u origin main
 ```
@@ -155,15 +139,15 @@ git push -u origin main
 enterprise-office-app/
 └── .github/
     └── workflows/
-        └── android-build.yml
+        └── harmony-build.yml
 ```
 
-### 5.2 完整 android-build.yml 配置
+### 5.2 完整 harmony-build.yml 配置
 
-将以下内容完整复制到 `android-build.yml`：
+将以下内容完整复制到 `harmony-build.yml`：
 
 ```yaml
-name: Build Android APK
+name: Build HarmonyOS APK
 
 on:
   workflow_dispatch:
@@ -198,42 +182,26 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build Android Debug APK
+      - name: Build HarmonyOS APK
         run: |
           cd android
           ./gradlew assembleDebug
-
-      - name: Build Android Release APK (unsigned)
-        run: |
-          cd android
-          ./gradlew assembleRelease || true
 
       - name: Create output directory
         run: |
           mkdir -p build
           cp android/app/build/outputs/apk/debug/*.apk build/
-          cp android/app/build/outputs/apk/release/*.apk build/ 2>/dev/null || true
           ls -la build/
 
-      - name: Upload Debug APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: android-debug-apk
+          name: harmony-apk
           path: build/app-debug.apk
-
-      - name: Upload Release APK
-        uses: actions/upload-artifact@v4
-        if: success()
-        with:
-          name: android-release-apk
-          path: build/app-release.apk
 
       - name: Upload to Releases
         run: |
-          cd build
-          for apk in *.apk; do
-            [ -f "$apk" ] && gh release create android-build-v1 --repo YOUR_USERNAME/enterprise-office-app --title "Android Build v1" "$apk" || true
-          done
+          gh release create harmony-build-v1 --repo YOUR_USERNAME/enterprise-office-app --title "HarmonyOS Build v1" build/app-debug.apk || true
 ```
 
 **重要替换**：
@@ -242,8 +210,8 @@ jobs:
 ### 5.3 提交工作流
 
 ```bash
-git add .github/workflows/android-build.yml
-git commit -m "Add Android build workflow"
+git add .github/workflows/harmony-build.yml
+git commit -m "Add HarmonyOS build workflow"
 git push
 ```
 
@@ -255,26 +223,16 @@ git push
 
 1. 打开仓库页面：https://github.com/YOUR_USERNAME/enterprise-office-app
 2. 点击 **Actions** 标签
-3. 在左侧找到 **Build Android APK**
+3. 在左侧找到 **Build HarmonyOS APK**
 4. 点击 **Run workflow** → 选择 `main` 分支 → 点击绿色按钮
 
 ### 6.2 等待构建
 
 构建通常需要 **8-12 分钟**，取决于项目大小。
 
-构建过程会显示：
-- `Checkout` - 拉取代码
-- `Setup Node` - 安装 Node 环境
-- `Install dependencies` - 安装依赖
-- `Generate Android native project` - 生成 Android 项目（expo prebuild）
-- `Setup JDK` - 安装 Java 17
-- `Build Android Debug APK` - 编译调试版
-- `Build Android Release APK` - 编译发布版
-- `Upload APKs` - 上传
-
 ### 6.3 构建成功标志
 
-在 GitHub Actions 页面看到绿色的 ✅ **Build Android APK** 表示成功。
+在 GitHub Actions 页面看到绿色的 ✅ **Build HarmonyOS APK** 表示成功。
 
 ---
 
@@ -286,212 +244,109 @@ git push
 
 1. 构建完成后，点击构建名称
 2. 点击 **Artifacts** 部分
-3. 下载：
-   - `android-debug-apk` - 调试版（推荐测试用）
-   - `android-release-apk` - 发布版
+3. 点击 **harmony-apk** 下载
+4. 解压得到 `app-debug.apk`
 
 #### 方法 B：从 Releases 下载
 
 1. 打开仓库首页
 2. 点击 **Releases**（右侧边栏）
-3. 点击 **android-build-v1**
+3. 点击 **harmony-build-v1**
 4. 下载 APK 文件
 
-### 7.2 安装 APK（鸿蒙/安卓通用）
+### 7.2 安装 APK 到鸿蒙设备
 
 #### 步骤一：传输 APK 到手机
 
 - 方法一：数据线连接电脑，直接复制 APK
 - 方法二：微信/QQ文件传输
 - 方法三：华为云空间
+- 方法四：蓝牙传输
 
 #### 步骤二：开启安装未知来源
 
+鸿蒙手机设置路径：
+
 ```
-鸿蒙/安卓手机设置：
+方式一：
 设置 → 安全 → 允许安装未知来源应用 → 开启
-```
 
-或者：
-
-```
+方式二：
 设置 → 应用 → 应用管理 → 找到文件管理器 → 允许安装未知来源
+
+方式三（鸿蒙3.0+）：
+设置 → 应用 → 应用助手 → 允许安装未知来源
 ```
 
 #### 步骤三：安装
 
-1. 找到 APK 文件
-2. 点击 → 安装
-3. 等待完成
+1. 找到 APK 文件（通常在文件管理器的下载目录）
+2. 点击 APK 文件
+3. 如果提示"此应用可能来源不明"，确认安装
+4. 等待安装完成
+
+### 7.3 验证安装
+
+安装完成后：
+1. 在桌面找到应用图标
+2. 点击打开测试
+3. 如果提示权限请求，点击允许
 
 ---
 
-## 8. 鸿蒙设备特殊说明
+## 8. 常见问题
 
-### 8.1 鸿蒙系统版本与 APK 兼容性
+### 8.1 安装后无法打开
 
-| 鸿蒙版本 | APK 支持情况 |
-|---------|-------------|
-| 鸿蒙 2.0 | 完美支持 APK（部分设备） |
-| 鸿蒙 3.0 | 完全支持 APK |
-| 鸿蒙 4.0 | 完全支持 APK |
-
-### 8.2 鸿蒙设备安装 APK 可能遇到的问题
-
-#### 问题：安装后无法打开
-
-**原因**：APK 可能需要额外的鸿蒙权限
+**原因**：应用缺少必要权限
 
 **解决**：
-- 进入 **设置** → **应用** → 找到对应应用
-- 手动开启所需权限（存储、相机等）
+1. 进入 **设置** → **应用** → 找到对应应用
+2. 点击 **权限**
+3. 手动开启所需权限（存储、相机、位置等）
 
-#### 问题：应用签名验证失败
+### 8.2 安装时提示"解析包失败"
 
-**原因**：APK 未签名
+**原因**：APK 文件损坏或下载不完整
 
-**解决**：使用 debug 版 APK（已自动签名）进行测试
+**解决**：
+1. 删除当前 APK
+2. 重新从 GitHub 下载
+3. 确保传输过程中文件完整
+
+### 8.3 鸿蒙设备不识别 APK
+
+**原因**：APK 的 CPU 架构不兼容
+
+**解决**：
+1. 确保下载的是 debug 版 APK（支持多种架构）
+2. 检查手机 CPU 架构（通常 arm64-v8a）
+
+### 8.4 提示"应用签名验证失败"
+
+**原因**：APK 未签名（正常现象）
+
+**解决**：
+- 这是正常现象，debug APK 本来就没签名
+- 不影响正常使用
+- 如果需要正式签名，使用发布版 APK
+
+### 8.5 鸿蒙 2.0 部分设备安装失败
+
+**原因**：早期鸿蒙设备兼容性问题
+
+**解决**：
+1. 尝试使用armeabi-v7a架构的 APK
+2. 或者升级鸿蒙系统到 3.0 以上
 
 ---
 
-## 9. 常见错误解决
+## 9. 完整配置文件
 
-### 9.1 GitHub Actions 相关错误
-
-#### 错误：HTTP 500 "Failed to run workflow dispatch"
-
-**原因**：GitHub 服务器 API 临时故障
-
-**解决**：
-- 等几分钟后重试
-- 检查 GitHub Status：https://www.githubstatus.com
-
-#### 错误：Java 版本不兼容
-
-```
-Could not find a compatible version of Java
-```
-
-**原因**：Java 版本太高或太低
-
-**解决**：确保 workflow 中使用 Java 17：
+### 9.1 完整 harmony-build.yml
 
 ```yaml
-- name: Setup JDK
-  uses: actions/setup-java@v4
-  with:
-    java-version: '17'
-    distribution: 'temurin'
-```
-
-#### 错误：Gradle 构建失败
-
-```
-Execution failed for task ':app:processReleaseResources'.
-```
-
-**原因**：资源文件问题或内存不足
-
-**解决**：
-- 清理构建缓存
-
-```bash
-cd android
-./gradlew clean
-./gradlew assembleDebug
-```
-
----
-
-### 9.2 Expo prebuild 相关错误
-
-#### 错误：expo prebuild 失败
-
-```
-Unable to find expo build configuration
-```
-
-**原因**：项目配置问题
-
-**解决**：
-1. 确保 `app.json` 配置正确
-2. 删除 `android` 目录后重新 prebuild
-
-```bash
-rm -rf android
-npx expo prebuild --platform android --clean
-```
-
----
-
-### 9.3 Android 构建相关错误
-
-#### 错误：SDK 找不到
-
-```
-ANDROID_HOME not set
-```
-
-**原因**：Android SDK 未正确配置
-
-**解决**：在 workflow 中添加 Android SDK 配置：
-
-```yaml
-- name: Setup Android SDK
-  uses: android-actions/setup-android@v2
-```
-
-#### 错误：NDK 找不到
-
-```
-Could not find ndk.dir in local.properties
-```
-
-**原因**：NDK 未安装
-
-**解决**：在 `gradle.properties` 中指定 NDK 版本：
-
-```properties
-android.ndkVersion=25.1.8937393
-```
-
----
-
-### 9.4 APK 打包相关错误
-
-#### 错误：APK 太大
-
-**原因**：未启用 ProGuard 压缩
-
-**解决**：在 `android/app/build.gradle` 中启用：
-
-```gradle
-android {
-    buildTypes {
-        release {
-            minifyEnabled true
-            shrinkResources true
-        }
-    }
-}
-```
-
-#### 错误：APK 无法安装
-
-**原因**：签名或架构问题
-
-**解决**：
-1. 确保 CPU 架构兼容（arm64-v8a 或 armeabi-v7a）
-2. 使用 debug APK 测试
-
----
-
-## 10. 完整配置文件
-
-### 10.1 完整 android-build.yml
-
-```yaml
-name: Build Android APK
+name: Build HarmonyOS APK
 
 on:
   workflow_dispatch:
@@ -526,45 +381,29 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Build Android Debug APK
+      - name: Build HarmonyOS APK
         run: |
           cd android
           ./gradlew assembleDebug
-
-      - name: Build Android Release APK (unsigned)
-        run: |
-          cd android
-          ./gradlew assembleRelease || true
 
       - name: Create output directory
         run: |
           mkdir -p build
           cp android/app/build/outputs/apk/debug/*.apk build/
-          cp android/app/build/outputs/apk/release/*.apk build/ 2>/dev/null || true
           ls -la build/
 
-      - name: Upload Debug APK
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: android-debug-apk
+          name: harmony-apk
           path: build/app-debug.apk
-
-      - name: Upload Release APK
-        uses: actions/upload-artifact@v4
-        if: success()
-        with:
-          name: android-release-apk
-          path: build/app-release.apk
 
       - name: Upload to Releases
         run: |
-          cd build
-          for apk in *.apk; do
-            [ -f "$apk" ] && gh release create android-build-v1 --repo 5411636/enterprise-office-app --title "Android Build v1" "$apk" || true
-          done
+          gh release create harmony-build-v1 --repo 5411636/enterprise-office-app --title "HarmonyOS Build v1" build/app-debug.apk || true
 ```
 
-### 10.2 app.json 配置（确保正确）
+### 9.2 app.json 配置（确保正确）
 
 ```json
 {
@@ -593,73 +432,42 @@ jobs:
 
 ---
 
-## 11. 方案对比和进阶
+## 10. 鸿蒙设备型号参考
 
-### 11.1 如果你想签名 APK（用于正式发布）
+### 支持 APK 安装的鸿蒙手机（部分）
 
-#### 方法 A：使用 Android Studio 自签名
+| 系列 | 型号 | 鸿蒙版本 |
+|------|------|---------|
+| Mate | Mate 30 | 鸿蒙 2.0 |
+| Mate | Mate 40 | 鸿蒙 3.0 |
+| Mate | Mate 50 | 鸿蒙 3.0 |
+| P | P40 | 鸿蒙 2.0 |
+| P | P50 | 鸿蒙 3.0 |
+| Nova | Nova 9 | 鸿蒙 2.0 |
+| Nova | Nova 10 | 鸿蒙 3.0 |
+| Pocket | Pocket 50 | 鸿蒙 3.0 |
 
-1. 打开 Android Studio
-2. Build → Generate Signed Bundle/APK
-3. 选择 APK → Next
-4. 创建新密钥库或使用现有密钥库
-5. 完成签名
+### 支持 APK 安装的鸿蒙平板（部分）
 
-#### 方法 B：使用命令行签名
-
-```bash
-# 创建签名密钥
-keytool -genkey -v -keystore my-release-key.keystore -alias my-key-alias -keyalg RSA -keysize 2048 -validity 10000
-
-# 签名 APK
-jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore my-release-key.keystore my-app.apk my-key-alias
-
-# 验证签名
-jarsigner -verify -verbose -certs my-app.apk
-```
-
-### 11.2 如果你想上架应用市场
-
-| 应用市场 | 需要账号 | 审核时间 | 难度 |
-|---------|---------|---------|------|
-| 华为应用市场 | 需注册 | 1-3天 | 中等 |
-| 应用宝 | 需注册 | 1-5天 | 中等 |
-| Google Play | 需注册（$25） | 1-7天 | 简单 |
-| 小米应用商店 | 需注册 | 1-3天 | 中等 |
-
-### 11.3 如果你想使用 Google Play
-
-1. 注册 Google Play 开发者账号（$25 一次性）
-2. 创建应用
-3. 上传 AAB 文件（不是 APK）
-4. 填写应用信息
-5. 提交审核
+| 系列 | 型号 | 鸿蒙版本 |
+|------|------|---------|
+| MatePad | MatePad Pro 12.6 | 鸿蒙 2.0 |
+| MatePad | MatePad Pro 11 | 鸿蒙 3.0 |
+| MatePad | MatePad Air | 鸿蒙 3.0 |
 
 ---
 
-## 12. 快速检查清单
+## 11. 相关教程
 
-构建前确认：
-
-- [ ] GitHub 仓库已创建
-- [ ] android-build.yml 已提交并推送
-- [ ] 所有文件已 git add 和 git commit
-- [ ] GitHub Actions 权限设置为 Read
-- [ ] 等待构建完成（无红色错误）
-
-安装前确认：
-
-- [ ] 下载了正确的 APK（debug 版推荐）
-- [ ] 鸿蒙/安卓设备已连接或 APK 已传输
-- [ ] 已开启"允许安装未知来源应用"
+- **iOS 打包**：[IOS_BUILD_TUTORIAL.md](./IOS_BUILD_TUTORIAL.md)
+- **安卓打包**：[ANDROID_BUILD_TUTORIAL.md](./ANDROID_BUILD_TUTORIAL.md)
 
 ---
 
-## 13. 项目信息
+## 12. 项目信息
 
 - **GitHub 仓库**：https://github.com/5411636/enterprise-office-app
 - **本地项目路径**：`C:\Users\86137\Desktop\langchain\code\rn\react-native-app`
-- **iOS 打包教程**：[IOS_BUILD_TUTORIAL.md](./IOS_BUILD_TUTORIAL.md)
 - **教程作者**：Claude Code
 - **最后更新**：2026-05-26
 
